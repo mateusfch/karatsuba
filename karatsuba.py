@@ -1,3 +1,9 @@
+# --------------------------------------------------------------------- #
+# Author: Mateus Freitas Charloto                                       #
+# Date: 09/08/2024                                                      #
+# Description: Karatsuba algorithm implementation for binary numbers    #
+# --------------------------------------------------------------------- #
+
 import sys
 
 def left_shift(x:str, shifts:int) -> str: return x + '0' * shifts
@@ -14,13 +20,25 @@ def adjust_zeros(x: str, y: str) -> tuple[str, str]:
 
 def addition(x: str, y: str) -> str:
     x, y = adjust_zeros(x, y)
-    return addition_aux(x, y, '0')
+    return addition_aux_iterative(x, y, '0')
 
-def addition_aux(x:str, y:str, carry:str) -> str:
+def addition_aux_iterative(x:str, y:str, carry:str) -> str:
+    result = ''
+    for i in range(len(x)-1, -1, -1):
+        if x[i] == y[i]: 
+            result+= carry
+            carry = x[i]
+        else: result+= flip_bit(carry)
+    
+    if carry == '1': result+= '1'
+    
+    return result[::-1]
+
+def addition_aux_recursive(x:str, y:str, carry:str) -> str:
     if not x and not y: return '' if carry=='0' else '1'
-    if x[-1] == y[-1]: return addition_aux(x[:-1], y[:-1], x[-1]) + carry
+    if x[-1] == y[-1]: return addition_aux_recursive(x[:-1], y[:-1], x[-1]) + carry
 
-    return addition_aux(x[:-1], y[:-1],carry) + flip_bit(carry)
+    return addition_aux_recursive(x[:-1], y[:-1],carry) + flip_bit(carry)
 
 def subtraction(x: str, y: str) -> str:
     x, y = adjust_zeros(x, y)
@@ -33,7 +51,9 @@ def subtraction(x: str, y: str) -> str:
 
 def karatsuba_step(x: str, y: str) -> str:
     x, y = adjust_zeros(x, y)
-    return karatsuba_step_aux(x, y).lstrip('0')
+    result = karatsuba_step_aux(x, y)
+    
+    return '0' if not result.strip('0') else result.lstrip('0')
 
 def karatsuba_step_aux(x: str, y: str) -> str:
     if len(x) != len(y): x, y = adjust_zeros(x, y)
@@ -52,8 +72,6 @@ def karatsuba_step_aux(x: str, y: str) -> str:
     
     return addition(addition(left_shift(ac, 2 * (n-m)), left_shift(ad_plus_bc, n-m)), bd)
     
-def check_result(x:str, y:str)-> bool: return karatsuba_step(x,y) == bin(int(x,2) * int(y,2))[2:]
-
-def main(): print(karatsuba_step(sys.argv[1], sys.argv[2])) if len(sys.argv) == 3 else print("Please provide two binary numbers to multiply")
+def main() -> None: print(karatsuba_step(sys.argv[1], sys.argv[2])) if len(sys.argv) == 3 else print("Please provide two binary numbers to multiply")
 
 if __name__ == "__main__": main()
